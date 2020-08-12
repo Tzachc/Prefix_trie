@@ -8,26 +8,21 @@ using namespace std;
 
 
 struct node{
-    int value;
+    string value;
     node *left;
     node *right;
     string action="";
     bool isLeaf;
 };
-struct Root {
-    string result;
-    node* left;
-    node* right;
-    bool isLeaf;
-};
-Root * buildRoot(){
-    string result ="";
-    Root* trie = new Root;
-    trie->left = nullptr;
-    trie->right = nullptr;
-    return trie;
+
+node *newNode(int data) {
+    string result = "";
+    node *temp = new node;
+    temp->value = data;
+    temp->left = temp->right = NULL;
+    return temp;
 }
-node* buildNode(){
+node* newNode(){
     string result="";
     node* trie = new node;
     trie->left = nullptr;
@@ -80,7 +75,7 @@ std::string toBinary(int n)
     while(n!=0) {r=(n%2==0 ?"0":"1")+r; n/=2;}
     return r;
 }
-void ADD(vector<string> info, Root* trie, string prefix) {
+void ADD(vector<string> info, node* trie, string prefix) {
     int first, second, third, four, submask;
     char nekoda;
     string prefixToAdd = prefix;
@@ -106,34 +101,39 @@ void ADD(vector<string> info, Root* trie, string prefix) {
     node* position;
     if(arrOfBinary[0] == "0"){
         if(trie->left == nullptr){
-            trie->left = buildNode();
+            trie->left = newNode();
+            trie->left->value = arrOfBinary[0];
         }
         position = trie->left;
     }
     else{
         if(trie->right == nullptr){
-            trie->right = buildNode();
+            trie->right = newNode();
+            trie->right->value = arrOfBinary[0];
         }
         position = trie->right;
     }
     for(int i=1;i<submask;i++){
         if(arrOfBinary[i] == "0"){
             if(position->left == nullptr){
-                position->left = buildNode();
+                position->left = newNode();
+                trie->left->value = arrOfBinary[i];
             }
             position = position->left;
         }
         else{
             if(position->right == nullptr){
-                position->right = buildNode();
+                position->right = newNode();
+                trie->right->value = arrOfBinary[i];
             }
             position = position->right;
         }
     }
     position->action = info[1];
     position->isLeaf = true;
-    cout<<"Added " << info[0] << " "<< info[1];
+    cout<<"Added " << info[0] << " "<< info[1]<<endl;
 }
+/*
 node *btree::search(int key, node *leaf){
     if(leaf != NULL){
         if(key == leaf->value){
@@ -152,7 +152,7 @@ node *btree::search(int key, node *leaf){
 node *btree::search(int key){
     return search(key, root);
 }
-
+*/
 void btree::destroy_tree(){
     destroy_tree(root);
 }
@@ -199,7 +199,7 @@ void btree::preorder_print(node *leaf){
 int main(int argc, char**argv){
 
     //btree tree;
-    Root *trie = buildRoot();
+    node *trie = newNode();
     string line;
     ifstream inputFile;
     inputFile.open(argv[1]);
@@ -229,6 +229,7 @@ int main(int argc, char**argv){
         }
         inputFile.close();
         cout<<"Success opening the file!"<<endl;
+        cout<<trie->right->value<<endl;
     }else
         cout<<"Failed open the file!"<<endl;
    // tree->insert(10);
