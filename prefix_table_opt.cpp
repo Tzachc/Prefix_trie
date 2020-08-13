@@ -13,38 +13,26 @@ struct node{
     string action="";
     bool isLeaf;
     int depth;
-    int totalNode;
+    int totalInsertNode;
     node* parent;
+private:
+    void destroy_tree(node *leaf);
+
 };
 
 node* newNode(){
-    string result="";
+    //string result="";
     node* trie = new node;
     trie->left = nullptr;
     trie->right = nullptr;
     trie->depth =0;
     trie->parent = nullptr;
+    trie->isLeaf=false;
+    trie->totalInsertNode=0;
     return trie;
 }
-class btree{
-public:
-    btree();
-    ~btree();
-    node *left;
-    node *right;
-    void destroy_tree();
-    void ADD(vector<string> info, node* tree);
 
-private:
-    void destroy_tree(node *leaf);
-
-    node *root;
-};
-btree::~btree(){
-    destroy_tree();
-}
-
-void btree::destroy_tree(node *leaf){
+void node::destroy_tree(node *leaf){
     if(leaf != NULL){
         destroy_tree(leaf->left);
         destroy_tree(leaf->right);
@@ -57,7 +45,14 @@ std::string toBinary(int n)
     while(n!=0) {r=(n%2==0 ?"0":"1")+r; n/=2;}
     return r;
 }
-
+void optimization(node* &position,node* &trie,int &submask){ // we enter here if all the requeniment applay
+    position = position->parent;
+    delete (position->left);
+    delete (position->right);
+    position->left = position->right = nullptr;
+    trie->totalInsertNode -= 2;
+    submask--;
+}
 void ADD(vector<string> info, node* trie, string prefix) {
     int first, second, third, four, submask;
     char nekoda;
@@ -81,18 +76,23 @@ void ADD(vector<string> info, node* trie, string prefix) {
         arrOfBinary[index+1] = str[i];
         index++;
     }
-    str = toBinary(four);
-    for(int i=0;i<str.length();i++){
-        arrOfBinary[index+1] = str[i];
-        index++;
+    if(four == 0){
+        arrOfBinary[index+1] = "0";
+    }else {
+        str = toBinary(four);
+        for (int i = 0; i < str.length(); i++) {
+            arrOfBinary[index + 1] = str[i];
+            index++;
+        }
     }
+
     node* position;
     if(arrOfBinary[0] == "0"){
         if(trie->left == nullptr){
             trie->left = newNode();
             trie->left->value = arrOfBinary[0];
             trie->left->depth = trie->depth+1;
-            trie->totalNode++;
+            trie->totalInsertNode++;
         }
         position = trie->left;
     }
@@ -101,56 +101,52 @@ void ADD(vector<string> info, node* trie, string prefix) {
             trie->right = newNode();
             trie->right->value = arrOfBinary[0];
             trie->right->depth = trie->depth+1;
-            trie->totalNode++;
+            trie->totalInsertNode++;
         }
         position = trie->right;
     }
-    for(int i=1;i<submask;i++){
-        if(arrOfBinary[i] == "0"){
+
+    for(int i=1 ; i< submask;i++){
+        cout<<arrOfBinary[i]<< " ";
+
+        if(arrOfBinary[i].compare("0")==0){
             if(position->left == nullptr){
                 position->left = newNode();
-                trie->left->value = arrOfBinary[i];
                 position->left->depth = position->depth+1;
-                trie->totalNode++;
+                trie->totalInsertNode++;
                 position->left->parent = position;
             }
             position = position->left;
         }
+
         else{
             if(position->right == nullptr){
                 position->right = newNode();
-                trie->right->value = arrOfBinary[i];
                 position->right->depth=position->depth+1;
-                trie->totalNode++;
+                trie->totalInsertNode++;
                 position->right->parent = position;
             }
             position = position->right;
         }
     }
+    position->action = info[1];
+    position->isLeaf = true;
+
     if(position->parent!= nullptr){
-        cout << "KIRILLLL111111" << endl;
-        if(position->parent->left!= nullptr){
-            cout<<"pleaseeeeee"<<endl;
-            if(position->parent->right!= nullptr){
-            cout << "KIRILLLL" << endl;
+        if(position->parent->left!= nullptr && position->parent->right!= nullptr ){
             if (position->parent->left->isLeaf == true && position->parent->right->isLeaf == true) {
                 if (position->parent->left->action == position->parent->right->action) {
-                    position = position->parent;
-                    delete (position->left);
-                    delete (position->right);
-                    position->left = position->right = nullptr;
-                    trie->totalNode -= 2;
-                    submask--;
+                    optimization(position,trie,submask); //perform optimization
                 }
             }
         }
     }
-    }
     position->action = info[1];
     position->isLeaf = true;
 
-    cout<<"Added " << info[0] << " "<< info[1]<< " at the depth "<<position->depth <<", total nodes : " << trie->totalNode<<endl;
+    cout<<"Added " << info[0] << " "<< info[1]<< " at the depth "<<position->depth <<", total nodes : " << trie->totalInsertNode<<endl;
 }
+
 void FIND(vector<string>info, node* trie,string prefix){
     int first, second, third, four, sub;
     char nekoda;
@@ -368,9 +364,6 @@ void REMOVE(vector<string> info,node* trie, string prefix){
         // didnt know how to implement..
     }
 }
-void btree::destroy_tree(){
-    destroy_tree(root);
-}
 
 int main(int argc, char**argv){
 
@@ -411,7 +404,7 @@ int main(int argc, char**argv){
             }
         }
         inputFile.close();
-        cout<<"Success opening the file!"<<endl;
+        //cout<<"Success opening the file!"<<endl;
     }else
         cout<<"Failed open the file!"<<endl;
 }
